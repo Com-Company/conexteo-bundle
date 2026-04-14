@@ -14,7 +14,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class ConexteoTransport extends AbstractTransport
 {
-    protected const HOST = 'api.conexteo.com';
+    protected const string HOST = 'api.conexteo.com';
 
     private ?string $sender = null;
 
