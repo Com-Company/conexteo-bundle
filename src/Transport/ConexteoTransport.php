@@ -18,7 +18,7 @@ final class ConexteoTransport extends AbstractTransport
 
     private ?string $sender = null;
 
-    public function __construct(private readonly string $appId, private readonly string $apiKey, HttpClientInterface $client = null, EventDispatcherInterface $dispatcher = null)
+    public function __construct(private readonly string $appId, private readonly string $apiKey, ?HttpClientInterface $client = null, ?EventDispatcherInterface $dispatcher = null)
     {
         parent::__construct($client, $dispatcher);
     }
