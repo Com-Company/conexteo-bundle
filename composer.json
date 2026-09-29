@@ -1,8 +1,13 @@
 {
   "name": "com-company/conexteo-notifier",
   "type": "symfony-bundle",
-  "description": "Symfony Conexteo Notifier Bridge",
-  "keywords": ["sms", "Conexteo", "notifier"],
+  "description": "Symfony Conexteo Notifier Bridge (RCS)",
+  "keywords": [
+    "sms",
+    "rcs",
+    "Conexteo",
+    "notifier"
+  ],
   "homepage": "https://www.com-company.fr/",
   "license": "MIT",
   "authors": [
