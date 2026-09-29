@@ -52,48 +52,66 @@ il n'y a rien à redéclarer.
 Utilisation
 -----------
 
-### Envoi
+Les classes `Connected\Conexteo\...` ci-dessous sont fournies par le bundle
+(à partir de la 6.0) : il n'y a rien à créer dans l'application.
 
 ```php
-$sentMessage = $texter->send((new SmsMessage('+33600000000', 'Bonjour'))->transport('conexteo'));
-$messageId = $sentMessage?->getMessageId(); // à conserver pour lire les réponses
+<?php
+
+namespace App\Service;
+
+use Connected\Conexteo\Client\ConexteoClientRegistry;
+use Connected\Conexteo\Model\MessageRcs;
+use Symfony\Component\Notifier\Message\SmsMessage;
+use Symfony\Component\Notifier\TexterInterface;
+
+final class RcsService
+{
+    public function __construct(
+        private readonly TexterInterface $texter,
+        private readonly ConexteoClientRegistry $conexteoClients,
+    ) {
+    }
+
+    /**
+     * Retourne le message_id Conexteo, à conserver pour lire les réponses.
+     */
+    public function send(string $phone, string $text): ?string
+    {
+        $sms = (new SmsMessage($phone, $text))->transport('conexteo');
+
+        return $this->texter->send($sms)?->getMessageId();
+    }
+
+    /**
+     * @return list<MessageRcs>
+     */
+    public function fetchReplies(string $messageId): array
+    {
+        ['messages' => $messages] = $this->conexteoClients->get('conexteo')->getRepliesAsMessages($messageId);
+
+        return $messages;
+    }
+}
 ```
+
+- `ConexteoClientRegistry::get()` prend le nom du transport déclaré dans
+  `texter_transports`, le même que dans `SmsMessage::transport()`. Avec plusieurs
+  comptes Conexteo, chaque transport a son client : `get('conexteo_location')`.
+- `getReplies()` renvoie la charge utile brute de l'API (`['items' => [...], 'meta' => [...]]`),
+  `getRepliesAsMessages()` la même chose hydratée en `MessageRcs`. Les deux
+  acceptent `page` et `limit` (50 par défaut).
+- Si le transport est déclaré en `null://null` (en dev par exemple), `get()` renvoie
+  un client qui n'appelle pas l'API et ne renvoie aucune réponse.
+- En cas d'erreur de l'API, le client lève une
+  `Connected\Conexteo\Exception\ConexteoApiException` (le transport la convertit
+  en `TransportException` pour Notifier).
 
 > [!WARNING]
 > `TexterInterface::send()` renvoie `null` quand Notifier est routé vers Messenger
 > en asynchrone : aucun `message_id` n'est alors récupérable. Pour lire les
-> réponses, envoyez en synchrone ou utilisez `ConexteoClientInterface::sendRcs()`.
-
-### Lecture des réponses
-
-`ConexteoClientRegistry` donne le client d'un transport à partir du nom déclaré
-dans `texter_transports`, le même que dans `SmsMessage::transport()` :
-
-```php
-public function __construct(private readonly ConexteoClientRegistry $conexteoClients)
-{
-}
-
-$conexteoClient = $this->conexteoClients->get('conexteo');
-
-// Charge utile brute renvoyée par l'API : ['items' => [...], 'meta' => [...]]
-$raw = $conexteoClient->getReplies($messageId, page: 1, limit: 50);
-
-// Même chose, hydratée en Connected\Conexteo\Model\MessageRcs
-['messages' => $messages, 'meta' => $meta] = $conexteoClient->getRepliesAsMessages($messageId);
-```
-
-Avec plusieurs comptes Conexteo, chaque transport a son client :
-`$this->conexteoClients->get('conexteo_location')`.
-
-Si le transport est déclaré en `null://null` (en dev par exemple), `get()` renvoie
-un `NullConexteoClient` : aucun appel à l'API, aucune réponse.
-
-### Erreurs
-
-En cas d'erreur de l'API, le client lève une
-`Connected\Conexteo\Exception\ConexteoApiException` (le transport la convertit en
-`TransportException` pour Notifier).
+> réponses, envoyez en synchrone ou appelez directement
+> `$conexteoClients->get('conexteo')->sendRcs($phone, $text)`.
 
 Montée de version
 -----------------

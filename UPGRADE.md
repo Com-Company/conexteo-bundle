@@ -45,6 +45,6 @@ Architecture
   `getRepliesAsMessages()`. Le client s'obtient avec
   `ConexteoClientRegistry::get('nom_du_transport')`, à partir des DSN déjà
   déclarés dans `framework.notifier.texter_transports` : aucune configuration
-  supplémentaire. Voir le [README](README.md#lecture-des-réponses).
+  supplémentaire. Voir le [README](README.md#utilisation).
 - `symfony/yaml` fait désormais partie des dépendances (le bundle charge sa
   configuration en YAML).
