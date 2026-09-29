@@ -42,5 +42,9 @@ Architecture
   prend désormais un `ConexteoClientInterface` au lieu de `$appId` / `$apiKey`.
   Rien ne change si le transport est créé par Notifier via le DSN.
 - Nouveau : lecture des réponses avec `ConexteoClientInterface::getReplies()` /
-  `getRepliesAsMessages()`. Le client se déclare comme service via
-  `ConexteoClientFactory::createFromDsnString()`, voir le [README](README.md#3-client-conexteo-lecture-des-réponses--dsn-à-réexposer).
+  `getRepliesAsMessages()`. Le client s'obtient avec
+  `ConexteoClientRegistry::get('nom_du_transport')`, à partir des DSN déjà
+  déclarés dans `framework.notifier.texter_transports` : aucune configuration
+  supplémentaire. Voir le [README](README.md#lecture-des-réponses).
+- `symfony/yaml` fait désormais partie des dépendances (le bundle charge sa
+  configuration en YAML).

@@ -5,3 +5,8 @@ services:
 
   Connected\Conexteo\Client\ConexteoClientFactory:
     arguments: [ '@?http_client' ]
+
+  Connected\Conexteo\Client\ConexteoClientRegistry:
+    arguments:
+      $texterTransportDsns: [] # renseigné par CopyTexterTransportDsnsPass
+      $clientFactory: '@Connected\Conexteo\Client\ConexteoClientFactory'

@@ -22,11 +22,6 @@ final class ConexteoClientFactory
         $this->httpClient = $httpClient ?? HttpClient::create();
     }
 
-    public function createFromDsnString(string $dsn): ConexteoClient
-    {
-        return $this->createFromDsn(new Dsn($dsn));
-    }
-
     public function createFromDsn(Dsn $dsn): ConexteoClient
     {
         return new ConexteoClient(
