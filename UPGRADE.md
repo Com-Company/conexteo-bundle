@@ -43,4 +43,4 @@ Architecture
   Rien ne change si le transport est créé par Notifier via le DSN.
 - Nouveau : lecture des réponses avec `ConexteoClientInterface::getReplies()` /
   `getRepliesAsMessages()`. Le client se déclare comme service via
-  `ConexteoClientFactory::createFromDsnString()`, voir le [README](README.md#lecture-des-réponses).
+  `ConexteoClientFactory::createFromDsnString()`, voir le [README](README.md#3-client-conexteo-lecture-des-réponses--dsn-à-réexposer).

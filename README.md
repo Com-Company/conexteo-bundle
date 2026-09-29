@@ -22,20 +22,21 @@ Prérequis
 - Symfony 7.x ou 8.x
 - Un contrat Conexteo **paramétré pour l'envoi de RCS**
 
-DSN example
------------
+Configuration
+-------------
 
-```
+### 1. DSN
+
+```dotenv
+# .env
 CONEXTEO_DSN=conexteo://APP_ID:API_KEY@default?sender=SENDER
 ```
 
-where:
-- `APP_ID` is your Conexteo App ID
-- `API_KEY` is your Conexteo API Key
-- `SENDER` is your sender (optional)
+- `APP_ID` : App ID Conexteo
+- `API_KEY` : clé d'API Conexteo
+- `SENDER` : expéditeur (optionnel)
 
-Envoi via Notifier
-------------------
+### 2. Transport Notifier (envoi)
 
 ```yaml
 # config/packages/notifier.yaml
@@ -45,16 +46,11 @@ framework:
             conexteo: '%env(CONEXTEO_DSN)%'
 ```
 
-```php
-$texter->send((new SmsMessage('+33600000000', 'Bonjour'))->transport('conexteo'));
-```
+### 3. Client Conexteo (lecture des réponses) : DSN à réexposer
 
-Lecture des réponses
---------------------
-
-Notifier n'expose pas ses transports : la lecture des réponses passe par
-`Connected\Conexteo\Client\ConexteoClientInterface`, à déclarer comme service
-à partir du même DSN (un service par compte Conexteo) :
+Notifier construit ses transports en interne et ne les expose pas comme services.
+Pour lire les réponses, il faut donc **redéclarer le même DSN** dans un service
+client, dans l'application :
 
 ```yaml
 # config/services.yaml
@@ -66,6 +62,29 @@ services:
 
     Connected\Conexteo\Client\ConexteoClientInterface: '@app.conexteo_client'
 ```
+
+Avec plusieurs comptes Conexteo (plusieurs DSN), déclarez un service client par
+compte et injectez-les par alias nommé, par exemple
+`Connected\Conexteo\Client\ConexteoClientInterface $conexteoLocationClient: '@app.conexteo_client.location'`.
+
+Cette étape est inutile si l'application ne fait qu'envoyer des messages.
+
+Utilisation
+-----------
+
+### Envoi
+
+```php
+$sentMessage = $texter->send((new SmsMessage('+33600000000', 'Bonjour'))->transport('conexteo'));
+$messageId = $sentMessage?->getMessageId(); // à conserver pour lire les réponses
+```
+
+> [!WARNING]
+> `TexterInterface::send()` renvoie `null` quand Notifier est routé vers Messenger
+> en asynchrone : aucun `message_id` n'est alors récupérable. Pour lire les
+> réponses, envoyez en synchrone ou utilisez `ConexteoClientInterface::sendRcs()`.
+
+### Lecture des réponses
 
 ```php
 public function __construct(private readonly ConexteoClientInterface $conexteoClient)
@@ -79,12 +98,7 @@ $raw = $this->conexteoClient->getReplies($messageId, page: 1, limit: 50);
 ['messages' => $messages, 'meta' => $meta] = $this->conexteoClient->getRepliesAsMessages($messageId);
 ```
 
-`$messageId` est l'identifiant renvoyé à l'envoi par `SentMessage::getMessageId()`.
-
-> [!WARNING]
-> `TexterInterface::send()` renvoie `null` quand Notifier est routé vers Messenger
-> en asynchrone : aucun `message_id` n'est alors récupérable. Pour lire les
-> réponses, envoyez en synchrone ou utilisez `ConexteoClientInterface::sendRcs()`.
+### Erreurs et tests
 
 En cas d'erreur de l'API, le client lève une
 `Connected\Conexteo\Exception\ConexteoApiException` (le transport la convertit en
