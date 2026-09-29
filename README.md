@@ -3,9 +3,9 @@ Conexteo Notifier
 
 Provides [Conexteo](https://developers.conexteo.com/) integration for Symfony Notifier.
 
-Les messages sont envoyés en **RCS** (`POST /messages/rcs`). Le transport expose
-également la lecture des réponses reçues (`GET /messages/replies`), qui ne rentre
-pas dans le contrat du composant Notifier.
+Les messages sont envoyés en **RCS** (`POST /messages/rcs`). Le bundle fournit aussi
+un client, `ConexteoClient`, pour lire les réponses reçues (`GET /messages/replies`),
+qui ne rentre pas dans le contrat du composant Notifier.
 
 > [!IMPORTANT]
 > **Le contrat Conexteo doit être paramétré pour l'envoi de RCS.**
@@ -34,34 +34,62 @@ where:
 - `API_KEY` is your Conexteo API Key
 - `SENDER` is your sender (optional)
 
+Envoi via Notifier
+------------------
+
+```yaml
+# config/packages/notifier.yaml
+framework:
+    notifier:
+        texter_transports:
+            conexteo: '%env(CONEXTEO_DSN)%'
+```
+
+```php
+$texter->send((new SmsMessage('+33600000000', 'Bonjour'))->transport('conexteo'));
+```
+
 Lecture des réponses
 --------------------
 
-`getReplies()` / `getRepliesAsMessages()` sont portées par le transport lui-même.
-Le composant Notifier n'exposant pas les transports individuellement, le bundle
-enregistre le sien dès qu'un DSN est configuré :
+Notifier n'expose pas ses transports : la lecture des réponses passe par
+`Connected\Conexteo\Client\ConexteoClientInterface`, à déclarer comme service
+à partir du même DSN (un service par compte Conexteo) :
 
 ```yaml
-# config/packages/conexteo.yaml
-conexteo:
-    dsn: '%env(CONEXTEO_DSN)%'
+# config/services.yaml
+services:
+    app.conexteo_client:
+        class: Connected\Conexteo\Client\ConexteoClient
+        factory: ['@Connected\Conexteo\Client\ConexteoClientFactory', 'createFromDsnString']
+        arguments: ['%env(CONEXTEO_DSN)%']
+
+    Connected\Conexteo\Client\ConexteoClientInterface: '@app.conexteo_client'
 ```
 
-`Connected\Conexteo\Transport\ConexteoTransport` devient alors autowirable :
-
 ```php
-public function __construct(private readonly ConexteoTransport $transport)
+public function __construct(private readonly ConexteoClientInterface $conexteoClient)
 {
 }
 
 // Charge utile brute renvoyée par l'API : ['items' => [...], 'meta' => [...]]
-$raw = $this->transport->getReplies($messageId, page: 1, limit: 50);
+$raw = $this->conexteoClient->getReplies($messageId, page: 1, limit: 50);
 
 // Même chose, hydratée en Connected\Conexteo\Model\MessageRcs
-['messages' => $messages, 'meta' => $meta] = $this->transport->getRepliesAsMessages($messageId);
+['messages' => $messages, 'meta' => $meta] = $this->conexteoClient->getRepliesAsMessages($messageId);
 ```
 
-Sans clé `dsn`, le bundle se limite au transport Notifier et n'enregistre rien.
+`$messageId` est l'identifiant renvoyé à l'envoi par `SentMessage::getMessageId()`.
+
+> [!WARNING]
+> `TexterInterface::send()` renvoie `null` quand Notifier est routé vers Messenger
+> en asynchrone : aucun `message_id` n'est alors récupérable. Pour lire les
+> réponses, envoyez en synchrone ou utilisez `ConexteoClientInterface::sendRcs()`.
+
+En cas d'erreur de l'API, le client lève une
+`Connected\Conexteo\Exception\ConexteoApiException` (le transport la convertit en
+`TransportException` pour Notifier). Dans les tests, remplacez
+`ConexteoClientInterface` par un mock.
 
 Montée de version
 -----------------

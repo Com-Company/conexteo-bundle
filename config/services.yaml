@@ -2,3 +2,6 @@ services:
   Connected\Conexteo\Transport\ConexteoTransportFactory:
     parent: notifier.transport_factory.abstract
     tags: [ 'texter.transport_factory' ]
+
+  Connected\Conexteo\Client\ConexteoClientFactory:
+    arguments: [ '@?http_client' ]
