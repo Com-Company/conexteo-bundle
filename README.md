@@ -63,16 +63,7 @@ $raw = $this->transport->getReplies($messageId, page: 1, limit: 50);
 
 Sans clé `dsn`, le bundle se limite au transport Notifier et n'enregistre rien.
 
-Upgrade 5.x -> 6.0
-------------------
+Montée de version
+-----------------
 
-- Les messages partent désormais sur `/messages/rcs` au lieu de `/messages`.
-  Le payload envoyé devient `{"type": "text", "data": {"text": ...}, "contacts": [{"recipient": ...}]}`.
-  **Le contrat Conexteo doit être paramétré pour envoyer des RCS**, sinon
-  tous les envois échouent.
-- Toute réponse HTTP >= 400 lève une `TransportException` (auparavant, seul un
-  code différent de 200 était considéré comme une erreur).
-- `SentMessage::getMessageId()` n'est renseigné que si l'API retourne un `message_id`,
-  au lieu de provoquer une erreur quand la clé est absente.
-- Nouvelle clé de configuration `conexteo.dsn` : elle enregistre le service
-  `ConexteoTransport`, seul moyen d'atteindre la lecture des réponses.
+Voir [UPGRADE.md](UPGRADE.md).
