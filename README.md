@@ -36,7 +36,7 @@ CONEXTEO_DSN=conexteo://APP_ID:API_KEY@default?sender=SENDER
 - `API_KEY` : clé d'API Conexteo
 - `SENDER` : expéditeur (optionnel)
 
-### 2. Transport Notifier (envoi)
+### 2. Transport Notifier
 
 ```yaml
 # config/packages/notifier.yaml
@@ -46,28 +46,8 @@ framework:
             conexteo: '%env(CONEXTEO_DSN)%'
 ```
 
-### 3. Client Conexteo (lecture des réponses) : DSN à réexposer
-
-Notifier construit ses transports en interne et ne les expose pas comme services.
-Pour lire les réponses, il faut donc **redéclarer le même DSN** dans un service
-client, dans l'application :
-
-```yaml
-# config/services.yaml
-services:
-    app.conexteo_client:
-        class: Connected\Conexteo\Client\ConexteoClient
-        factory: ['@Connected\Conexteo\Client\ConexteoClientFactory', 'createFromDsnString']
-        arguments: ['%env(CONEXTEO_DSN)%']
-
-    Connected\Conexteo\Client\ConexteoClientInterface: '@app.conexteo_client'
-```
-
-Avec plusieurs comptes Conexteo (plusieurs DSN), déclarez un service client par
-compte et injectez-les par alias nommé, par exemple
-`Connected\Conexteo\Client\ConexteoClientInterface $conexteoLocationClient: '@app.conexteo_client.location'`.
-
-Cette étape est inutile si l'application ne fait qu'envoyer des messages.
+C'est la seule configuration : le bundle relit ces DSN pour la lecture des réponses,
+il n'y a rien à redéclarer.
 
 Utilisation
 -----------
@@ -86,24 +66,34 @@ $messageId = $sentMessage?->getMessageId(); // à conserver pour lire les répon
 
 ### Lecture des réponses
 
+`ConexteoClientRegistry` donne le client d'un transport à partir du nom déclaré
+dans `texter_transports`, le même que dans `SmsMessage::transport()` :
+
 ```php
-public function __construct(private readonly ConexteoClientInterface $conexteoClient)
+public function __construct(private readonly ConexteoClientRegistry $conexteoClients)
 {
 }
 
+$conexteoClient = $this->conexteoClients->get('conexteo');
+
 // Charge utile brute renvoyée par l'API : ['items' => [...], 'meta' => [...]]
-$raw = $this->conexteoClient->getReplies($messageId, page: 1, limit: 50);
+$raw = $conexteoClient->getReplies($messageId, page: 1, limit: 50);
 
 // Même chose, hydratée en Connected\Conexteo\Model\MessageRcs
-['messages' => $messages, 'meta' => $meta] = $this->conexteoClient->getRepliesAsMessages($messageId);
+['messages' => $messages, 'meta' => $meta] = $conexteoClient->getRepliesAsMessages($messageId);
 ```
 
-### Erreurs et tests
+Avec plusieurs comptes Conexteo, chaque transport a son client :
+`$this->conexteoClients->get('conexteo_location')`.
+
+Si le transport est déclaré en `null://null` (en dev par exemple), `get()` renvoie
+un `NullConexteoClient` : aucun appel à l'API, aucune réponse.
+
+### Erreurs
 
 En cas d'erreur de l'API, le client lève une
 `Connected\Conexteo\Exception\ConexteoApiException` (le transport la convertit en
-`TransportException` pour Notifier). Dans les tests, remplacez
-`ConexteoClientInterface` par un mock.
+`TransportException` pour Notifier).
 
 Montée de version
 -----------------
