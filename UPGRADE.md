@@ -33,10 +33,14 @@ Gestion des erreurs
 - `SentMessage::getMessageId()` n'est renseigné que si l'API retourne un
   `message_id`, au lieu de provoquer une erreur quand la clé est absente.
 
-Configuration
--------------
+Architecture
+------------
 
-- Nouvelle clé optionnelle `conexteo.dsn`. Renseignée, elle enregistre le service
-  `Connected\Conexteo\Transport\ConexteoTransport`, nécessaire pour lire les
-  réponses (`getReplies()` / `getRepliesAsMessages()`). Voir le [README](README.md#lecture-des-réponses).
-  Sans cette clé, rien ne change pour l'envoi via Notifier.
+- Les appels HTTP sont sortis du transport vers
+  `Connected\Conexteo\Client\ConexteoClient` (interface `ConexteoClientInterface`).
+  `ConexteoTransport` ne fait plus qu'adapter Notifier au client : son constructeur
+  prend désormais un `ConexteoClientInterface` au lieu de `$appId` / `$apiKey`.
+  Rien ne change si le transport est créé par Notifier via le DSN.
+- Nouveau : lecture des réponses avec `ConexteoClientInterface::getReplies()` /
+  `getRepliesAsMessages()`. Le client se déclare comme service via
+  `ConexteoClientFactory::createFromDsnString()`, voir le [README](README.md#lecture-des-réponses).
