@@ -18,10 +18,12 @@ final class ConexteoRCSOptions implements MessageOptionsInterface
 
     private ?SmsFallback $fallback = null;
 
-    /** @var array<string, scalar> */
+    private ?ShortUrl $shortUrl = null;
+
+    /** @var array<string, string> */
     private array $contactVariables = [];
 
-    /** @var array<string, scalar> */
+    /** @var array<string, string|bool> */
     private array $options = [];
 
     public function content(RcsContentInterface $content): static
@@ -38,10 +40,17 @@ final class ConexteoRCSOptions implements MessageOptionsInterface
         return $this;
     }
 
+    public function shortUrl(ShortUrl $shortUrl): static
+    {
+        $this->shortUrl = $shortUrl;
+
+        return $this;
+    }
+
     /**
      * Variables de personnalisation du destinataire (`prenom`, `commande`...).
      *
-     * @param array<string, scalar> $contactVariables
+     * @param array<string, string> $contactVariables
      */
     public function contactVariables(array $contactVariables): static
     {
@@ -51,7 +60,7 @@ final class ConexteoRCSOptions implements MessageOptionsInterface
     }
 
     /**
-     * Clé de dédoublonnage côté Conexteo.
+     * Clé de dédoublonnage : un second envoi avec le même identifiant est rejeté par l'API (HTTP 409).
      */
     public function externalId(string $externalId): static
     {
@@ -62,13 +71,15 @@ final class ConexteoRCSOptions implements MessageOptionsInterface
 
     public function scheduleAt(\DateTimeImmutable $scheduleAt): static
     {
-        $this->options['scheduleAt'] = $scheduleAt->setTimezone(new \DateTimeZone('UTC'))->format(\DATE_ATOM);
+        $this->options['scheduleAt'] = $scheduleAt->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z');
 
         return $this;
     }
 
     /**
-     * À true, seuls les destinataires compatibles RCS le reçoivent, les autres reçoivent directement le SMS de repli.
+     * À true, seuls les contacts déjà analysés compatibles RCS le reçoivent, les autres reçoivent
+     * directement le SMS de repli (nécessite une liste analysée par Conexteo). À false, le RCS
+     * part vers tous et le repli SMS se fait au retour de l'opérateur.
      */
     public function checkCapability(bool $checkCapability = true): static
     {
@@ -98,7 +109,7 @@ final class ConexteoRCSOptions implements MessageOptionsInterface
     }
 
     /**
-     * @return array<string, scalar>
+     * @return array<string, string>
      */
     public function getContactVariables(): array
     {
@@ -119,6 +130,10 @@ final class ConexteoRCSOptions implements MessageOptionsInterface
 
         if (null !== $this->fallback) {
             $payload['fallback'] = $this->fallback->toArray();
+        }
+
+        if (null !== $this->shortUrl) {
+            $payload['shorturl'] = $this->shortUrl->toArray();
         }
 
         return $payload;

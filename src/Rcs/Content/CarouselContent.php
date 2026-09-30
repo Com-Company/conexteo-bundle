@@ -4,24 +4,38 @@ declare(strict_types=1);
 
 namespace Connected\Conexteo\Rcs\Content;
 
+use Connected\Conexteo\Rcs\Choice\ChoiceInterface;
+use Connected\Conexteo\Rcs\Choice\ChoiceList;
+
 /**
- * Carrousel de 2 à 10 cartes, facturé comme un seul message.
+ * Carrousel de 1 à 10 cartes, facturé comme un seul message, avec jusqu'à
+ * 3 boutons communs sous le carrousel.
  */
 final readonly class CarouselContent implements RcsContentInterface
 {
-    public const int MIN_CARDS = 2;
     public const int MAX_CARDS = 10;
+    public const int MAX_CHOICES = 3;
 
     /** @var list<CardContent> */
     public array $cards;
 
-    public function __construct(CardContent ...$cards)
+    /** @var list<ChoiceInterface> */
+    public array $choices;
+
+    /**
+     * @param list<CardContent>     $cards
+     * @param list<ChoiceInterface> $choices
+     */
+    public function __construct(array $cards, array $choices = [])
     {
-        if (\count($cards) < self::MIN_CARDS || \count($cards) > self::MAX_CARDS) {
-            throw new \InvalidArgumentException(sprintf('An RCS carousel needs between %d and %d cards, %d given.', self::MIN_CARDS, self::MAX_CARDS, \count($cards)));
+        if ([] === $cards || \count($cards) > self::MAX_CARDS) {
+            throw new \InvalidArgumentException(sprintf('An RCS carousel needs between 1 and %d cards, %d given.', self::MAX_CARDS, \count($cards)));
         }
 
+        ChoiceList::assertNoMoreThan($choices, self::MAX_CHOICES, 'carousel');
+
         $this->cards = array_values($cards);
+        $this->choices = array_values($choices);
     }
 
     public function type(): string
@@ -31,6 +45,12 @@ final readonly class CarouselContent implements RcsContentInterface
 
     public function toData(): array
     {
-        return ['cards' => array_map(static fn (CardContent $card): array => $card->toData(), $this->cards)];
+        $data = ['cards' => array_map(static fn (CardContent $card): array => $card->toData(), $this->cards)];
+
+        if ([] !== $this->choices) {
+            $data['choices'] = ChoiceList::toArray($this->choices);
+        }
+
+        return $data;
     }
 }

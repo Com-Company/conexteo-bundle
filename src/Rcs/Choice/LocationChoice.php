@@ -4,28 +4,44 @@ declare(strict_types=1);
 
 namespace Connected\Conexteo\Rcs\Choice;
 
+use Connected\Conexteo\Rcs\TextLengthGuard;
+
 /**
  * Bouton qui affiche un lieu sur une carte.
+ *
+ * Les coordonnées acceptent un nombre, une chaîne numérique ("48.8566")
+ * ou une variable de contact ("#perso1#").
  */
 final readonly class LocationChoice implements ChoiceInterface
 {
+    public const int MAX_LABEL_LENGTH = 1000;
+
     public function __construct(
         public string $title,
-        public string $label,
-        public float $latitude,
-        public float $longitude,
+        public float|string $latitude,
+        public float|string $longitude,
+        public ?string $label = null,
     ) {
-        ChoiceTitleLength::assertWithinLimit($title);
+        TextLengthGuard::assertNotLongerThan($title, self::MAX_TITLE_LENGTH, 'button title');
+
+        if (null !== $label) {
+            TextLengthGuard::assertNotLongerThan($label, self::MAX_LABEL_LENGTH, 'location label');
+        }
     }
 
     public function toArray(): array
     {
-        return [
+        $choice = [
             'type' => 'location',
             'title' => $this->title,
-            'label' => $this->label,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
         ];
+
+        if (null !== $this->label) {
+            $choice['label'] = $this->label;
+        }
+
+        return $choice;
     }
 }

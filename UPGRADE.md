@@ -24,7 +24,7 @@ Envoi
   ```
 
 - Les cartes, carrousels, boutons et options facultatives (repli SMS,
-  `checkCapability`, `external_id`, `scheduleAt`...) passent par
+  `checkCapability`, `shorturl`, `external_id`, `scheduleAt`...) passent par
   `SmsMessage::options(new ConexteoRCSOptions())`. Voir le
   [README](README.md#rcs-enrichi--cartes-carrousels-boutons-et-options).
 - `SmsMessage::getFrom()` remplace le `sender` du DSN quand il est renseigné.
@@ -54,5 +54,7 @@ Architecture
   supplémentaire. Voir le [README](README.md#utilisation).
 - `ConexteoClientInterface::sendRcs()` prend un `ConexteoRCSOptions` et un
   expéditeur facultatif : `sendRcs(string $recipient, ConexteoRCSOptions $options, ?string $sender = null)`.
+- Nouveau : `ConexteoClientInterface::estimateRcsCredits()` renvoie les crédits
+  nécessaires sans envoyer (`resumeBefore=true`).
 - `symfony/yaml` fait désormais partie des dépendances (le bundle charge sa
   configuration en YAML), ainsi que `symfony/polyfill-mbstring`.

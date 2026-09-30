@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace Connected\Conexteo\Rcs\Content;
 
 use Connected\Conexteo\Rcs\Choice\ChoiceInterface;
+use Connected\Conexteo\Rcs\Choice\ChoiceList;
+use Connected\Conexteo\Rcs\TextLengthGuard;
 
 /**
- * Carte riche : titre, description, média (JPEG, PNG, GIF ou MP4 public, pas de WebP) et boutons.
+ * Carte riche : un média public obligatoire (jpeg, jpg, png, gif, mp4, h263, m4v,
+ * m4p, mpeg ou webm), un titre, une description et jusqu'à 4 boutons.
  */
 final readonly class CardContent implements RcsContentInterface
 {
+    public const int MAX_TITLE_LENGTH = 200;
+    public const int MAX_DESCRIPTION_LENGTH = 2000;
     public const int MAX_CHOICES = 4;
 
     /** @var list<ChoiceInterface> */
@@ -20,14 +25,20 @@ final readonly class CardContent implements RcsContentInterface
      * @param list<ChoiceInterface> $choices
      */
     public function __construct(
-        public string $title,
-        public string $description,
-        public ?string $mediaUrl = null,
+        public string $mediaUrl,
+        public ?string $title = null,
+        public ?string $description = null,
         array $choices = [],
     ) {
-        if (\count($choices) > self::MAX_CHOICES) {
-            throw new \InvalidArgumentException(sprintf('An RCS card accepts at most %d buttons, %d given.', self::MAX_CHOICES, \count($choices)));
+        if (null !== $title) {
+            TextLengthGuard::assertNotLongerThan($title, self::MAX_TITLE_LENGTH, 'card title');
         }
+
+        if (null !== $description) {
+            TextLengthGuard::assertNotLongerThan($description, self::MAX_DESCRIPTION_LENGTH, 'card description');
+        }
+
+        ChoiceList::assertNoMoreThan($choices, self::MAX_CHOICES, 'card');
 
         $this->choices = array_values($choices);
     }
@@ -39,17 +50,18 @@ final readonly class CardContent implements RcsContentInterface
 
     public function toData(): array
     {
-        $data = [
-            'title' => $this->title,
-            'description' => $this->description,
-        ];
+        $data = ['media_message_url' => $this->mediaUrl];
 
-        if (null !== $this->mediaUrl) {
-            $data['media_message_url'] = $this->mediaUrl;
+        if (null !== $this->title) {
+            $data['title'] = $this->title;
+        }
+
+        if (null !== $this->description) {
+            $data['description'] = $this->description;
         }
 
         if ([] !== $this->choices) {
-            $data['choices'] = array_map(static fn (ChoiceInterface $choice): array => $choice->toArray(), $this->choices);
+            $data['choices'] = ChoiceList::toArray($this->choices);
         }
 
         return $data;
