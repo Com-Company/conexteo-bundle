@@ -6,6 +6,7 @@ namespace Connected\Conexteo\Client;
 
 use Connected\Conexteo\Exception\ConexteoApiException;
 use Connected\Conexteo\Model\MessageRcs;
+use Connected\Conexteo\Rcs\ConexteoRCSOptions;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -34,19 +35,11 @@ final class ConexteoClient implements ConexteoClientInterface
         ]);
     }
 
-    public function sendRcs(string $recipient, string $text): ?string
+    public function sendRcs(string $recipient, ConexteoRCSOptions $options, ?string $sender = null): ?string
     {
-        $content = [
-            'type' => 'text',
-            'data' => ['text' => $text],
-            'contacts' => [['recipient' => $recipient]],
-        ];
+        $payload = $this->buildRcsPayload($recipient, $options, $sender ?? $this->sender);
 
-        if (null !== $this->sender) {
-            $content['sender'] = $this->sender;
-        }
-
-        $response = $this->httpClient->request('POST', '/messages/rcs', ['json' => $content]);
+        $response = $this->httpClient->request('POST', '/messages/rcs', ['json' => $payload]);
 
         $data = $this->decodeResponseOrThrow($response, 'Unable to send the RCS message');
 
@@ -74,6 +67,22 @@ final class ConexteoClient implements ConexteoClientInterface
             'messages' => array_map(MessageRcs::fromReply(...), $data['items'] ?? []),
             'meta' => $data['meta'] ?? [],
         ];
+    }
+
+    private function buildRcsPayload(string $recipient, ConexteoRCSOptions $options, ?string $sender): array
+    {
+        if (!$options->hasContent()) {
+            throw new \InvalidArgumentException('The RCS options have no content: call ConexteoRCSOptions::content().');
+        }
+
+        $payload = $options->toArray();
+        $payload['contacts'] = [['recipient' => $recipient] + $options->getContactVariables()];
+
+        if (null !== $sender) {
+            $payload['sender'] = $sender;
+        }
+
+        return $payload;
     }
 
     /**
