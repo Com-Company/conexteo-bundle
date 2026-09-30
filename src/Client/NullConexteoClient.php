@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Connected\Conexteo\Client;
 
+use Connected\Conexteo\Rcs\ConexteoRCSOptions;
+
 /**
  * Client qui n'appelle pas l'API, utilisé quand le transport Notifier est `null://`.
  */
 final class NullConexteoClient implements ConexteoClientInterface
 {
-    public function sendRcs(string $recipient, string $text): ?string
+    public function sendRcs(string $recipient, ConexteoRCSOptions $options, ?string $sender = null): ?string
     {
         return null;
     }

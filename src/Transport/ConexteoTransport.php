@@ -4,8 +4,12 @@ namespace Connected\Conexteo\Transport;
 
 use Connected\Conexteo\Client\ConexteoClientInterface;
 use Connected\Conexteo\Exception\ConexteoApiException;
+use Connected\Conexteo\Rcs\ConexteoRCSOptions;
+use Connected\Conexteo\Rcs\Content\TextContent;
+use Connected\Conexteo\Rcs\SmsFallback;
 use Symfony\Component\Notifier\Exception\TransportException;
 use Symfony\Component\Notifier\Exception\UnsupportedMessageTypeException;
+use Symfony\Component\Notifier\Exception\UnsupportedOptionsException;
 use Symfony\Component\Notifier\Message\MessageInterface;
 use Symfony\Component\Notifier\Message\SentMessage;
 use Symfony\Component\Notifier\Message\SmsMessage;
@@ -34,8 +38,20 @@ final class ConexteoTransport extends AbstractTransport
             throw new UnsupportedMessageTypeException(__CLASS__, SmsMessage::class, $message);
         }
 
+        $options = $message->getOptions() ?? new ConexteoRCSOptions();
+
+        if (!$options instanceof ConexteoRCSOptions) {
+            throw new UnsupportedOptionsException(__CLASS__, ConexteoRCSOptions::class, $options);
+        }
+
+        $options = $options->hasContent()
+            ? $this->withSubjectAsFallbackIfMissing($options, $message->getSubject())
+            : $this->withSubjectAsTextContent($options, $message->getSubject());
+
+        $sender = '' !== $message->getFrom() ? $message->getFrom() : null;
+
         try {
-            $messageId = $this->conexteoClient->sendRcs($message->getPhone(), $message->getSubject());
+            $messageId = $this->conexteoClient->sendRcs($message->getPhone(), $options, $sender);
         } catch (ConexteoApiException $e) {
             throw new TransportException($e->getMessage(), $e->response, 0, $e);
         }
@@ -51,7 +67,8 @@ final class ConexteoTransport extends AbstractTransport
 
     public function supports(MessageInterface $message): bool
     {
-        return $message instanceof SmsMessage;
+        return $message instanceof SmsMessage
+            && (null === $message->getOptions() || $message->getOptions() instanceof ConexteoRCSOptions);
     }
 
     public function __toString(): string
@@ -68,5 +85,22 @@ final class ConexteoTransport extends AbstractTransport
         $this->sender = $sender;
 
         return $this;
+    }
+
+    private function withSubjectAsTextContent(ConexteoRCSOptions $options, string $subject): ConexteoRCSOptions
+    {
+        return (clone $options)->content(new TextContent($subject));
+    }
+
+    /**
+     * Quand le contenu vient des options, le sujet du SmsMessage sert de SMS de repli, sauf si un repli est déjà défini.
+     */
+    private function withSubjectAsFallbackIfMissing(ConexteoRCSOptions $options, string $subject): ConexteoRCSOptions
+    {
+        if ($options->hasFallback() || '' === $subject) {
+            return $options;
+        }
+
+        return (clone $options)->fallback(new SmsFallback($subject));
     }
 }

@@ -23,6 +23,12 @@ Envoi
   {"type": "text", "data": {"text": "..."}, "contacts": [{"recipient": "+33600000000"}], "sender": "..."}
   ```
 
+- Les cartes, carrousels, boutons et options facultatives (repli SMS,
+  `checkCapability`, `external_id`, `scheduleAt`...) passent par
+  `SmsMessage::options(new ConexteoRCSOptions())`. Voir le
+  [README](README.md#rcs-enrichi--cartes-carrousels-boutons-et-options).
+- `SmsMessage::getFrom()` remplace le `sender` du DSN quand il est renseigné.
+
 Gestion des erreurs
 -------------------
 
@@ -46,5 +52,7 @@ Architecture
   `ConexteoClientRegistry::get('nom_du_transport')`, à partir des DSN déjà
   déclarés dans `framework.notifier.texter_transports` : aucune configuration
   supplémentaire. Voir le [README](README.md#utilisation).
+- `ConexteoClientInterface::sendRcs()` prend un `ConexteoRCSOptions` et un
+  expéditeur facultatif : `sendRcs(string $recipient, ConexteoRCSOptions $options, ?string $sender = null)`.
 - `symfony/yaml` fait désormais partie des dépendances (le bundle charge sa
-  configuration en YAML).
+  configuration en YAML), ainsi que `symfony/polyfill-mbstring`.
