@@ -21,6 +21,17 @@ interface ConexteoClientInterface
     public function sendRcs(string $recipient, ConexteoRCSOptions $options, ?string $sender = null): ?string;
 
     /**
+     * Crédits RCS et SMS nécessaires à cet envoi, sans l'effectuer (`resumeBefore=true`),
+     * tels que renvoyés par l'API (`['sms' => [...], 'rcs' => [...], 'recipients_count' => ...]`).
+     *
+     * @param string|null $sender remplace l'expéditeur du DSN
+     *
+     * @throws \InvalidArgumentException si les options n'ont pas de contenu
+     * @throws ConexteoApiException
+     */
+    public function estimateRcsCredits(string $recipient, ConexteoRCSOptions $options, ?string $sender = null): array;
+
+    /**
      * Réponses reçues pour un message, telles que renvoyées par l'API
      * (`['items' => [...], 'meta' => [...]]`).
      *

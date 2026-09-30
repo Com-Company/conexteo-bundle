@@ -46,6 +46,18 @@ final class ConexteoClient implements ConexteoClientInterface
         return isset($data['message_id']) ? (string) $data['message_id'] : null;
     }
 
+    public function estimateRcsCredits(string $recipient, ConexteoRCSOptions $options, ?string $sender = null): array
+    {
+        $payload = $this->buildRcsPayload($recipient, $options, $sender ?? $this->sender);
+
+        $response = $this->httpClient->request('POST', '/messages/rcs', [
+            'query' => ['resumeBefore' => 'true'],
+            'json' => $payload,
+        ]);
+
+        return $this->decodeResponseOrThrow($response, 'Unable to estimate the RCS credits');
+    }
+
     public function getReplies(string $messageId, int $page = 1, int $limit = 50): array
     {
         $response = $this->httpClient->request('GET', '/messages/replies', [

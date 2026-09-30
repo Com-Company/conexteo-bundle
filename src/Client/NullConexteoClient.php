@@ -16,6 +16,11 @@ final class NullConexteoClient implements ConexteoClientInterface
         return null;
     }
 
+    public function estimateRcsCredits(string $recipient, ConexteoRCSOptions $options, ?string $sender = null): array
+    {
+        return [];
+    }
+
     public function getReplies(string $messageId, int $page = 1, int $limit = 50): array
     {
         return ['items' => [], 'meta' => []];

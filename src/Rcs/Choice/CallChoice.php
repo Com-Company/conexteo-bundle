@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Connected\Conexteo\Rcs\Choice;
 
+use Connected\Conexteo\Rcs\TextLengthGuard;
+
 /**
  * Bouton qui lance un appel téléphonique.
  */
@@ -13,7 +15,7 @@ final readonly class CallChoice implements ChoiceInterface
         public string $title,
         public string $phoneNumber,
     ) {
-        ChoiceTitleLength::assertWithinLimit($title);
+        TextLengthGuard::assertNotLongerThan($title, self::MAX_TITLE_LENGTH, 'button title');
     }
 
     public function toArray(): array

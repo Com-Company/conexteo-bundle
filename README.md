@@ -130,9 +130,9 @@ $sms = (new SmsMessage($phone, 'Votre colis #4821 est expédié : https://exempl
     ->transport('conexteo')
     ->options((new ConexteoRCSOptions())
         ->content(new CardContent(
+            mediaUrl: 'https://cdn.exemple.fr/colis.png',
             title: 'Commande #4821 expédiée',
             description: 'Livraison demain entre 9h et 13h',
-            mediaUrl: 'https://cdn.exemple.fr/colis.png',
             choices: [
                 new UrlChoice('Suivre le colis', 'https://exemple.fr/suivi'),
                 new CallChoice('Nous appeler', '+33100000000'),
@@ -148,36 +148,47 @@ Contenus (`Connected\Conexteo\Rcs\Content`) :
 
 | Classe | Payload |
 |---|---|
-| `TextContent($text)` | `type: text` |
-| `CardContent($title, $description, $mediaUrl, $choices)` | `type: card`, 4 boutons maximum. Média public en JPEG, PNG, GIF ou MP4 (pas de WebP) |
-| `CarouselContent(...$cards)` | `type: carousel`, de 2 à 10 `CardContent`, facturé comme un seul message |
+| `TextContent($text)` | `type: text`, 2000 caractères maximum |
+| `CardContent($mediaUrl, $title, $description, $choices)` | `type: card`. Média public obligatoire (jpeg, jpg, png, gif, mp4, h263, m4v, m4p, mpeg, webm), titre (200 car.) et description (2000 car.) facultatifs, 4 boutons maximum |
+| `CarouselContent($cards, $choices)` | `type: carousel`, de 1 à 10 `CardContent` et jusqu'à 3 boutons communs. Facturé comme un seul message |
 
 Boutons (`Connected\Conexteo\Rcs\Choice`), libellé de 25 caractères maximum :
 
 | Classe | Action |
 |---|---|
 | `ReplyChoice($text)` | réponse rapide, revient dans `getReplies()` |
-| `UrlChoice($title, $url)` | ouvre un lien |
+| `UrlChoice($title, $url)` | ouvre un lien (2048 caractères maximum) |
 | `CallChoice($title, $phoneNumber)` | lance un appel |
-| `LocationChoice($title, $label, $latitude, $longitude)` | affiche un lieu |
+| `LocationChoice($title, $latitude, $longitude, $label)` | affiche un lieu. Coordonnées en nombre, en chaîne numérique ou en variable de contact (`'#perso1#'`) |
 
 Options facultatives de `ConexteoRCSOptions` :
 
-| Méthode | Effet |
-|---|---|
-| `fallback(new SmsFallback($content, $sender))` | SMS envoyé aux destinataires qui ne reçoivent pas le RCS |
-| `checkCapability()` | seuls les destinataires compatibles reçoivent le RCS, les autres reçoivent directement le SMS de repli |
-| `externalId($id)` | clé de dédoublonnage |
-| `scheduleAt($date)` | envoi différé (converti en UTC) |
-| `contactVariables(['prenom' => 'Alice'])` | variables de personnalisation du destinataire |
-| `campaignName($name)` | nom de la campagne dans l'interface Conexteo |
+| Méthode | Champ | Effet |
+|---|---|---|
+| `fallback(new SmsFallback($content, $sender))` | `fallback` | SMS envoyé aux destinataires qui ne reçoivent pas le RCS (expéditeur de 11 caractères maximum) |
+| `checkCapability()` | `checkCapability` | seuls les contacts déjà analysés compatibles RCS le reçoivent, les autres reçoivent directement le SMS de repli. Nécessite une liste analysée |
+| `shortUrl(new ShortUrl($url, ShortUrlMode::Unique))` | `shorturl` | lien raccourci par Conexteo (`Unique` ou `Multiple`) |
+| `externalId($id)` | `external_id` | dédoublonnage : un second envoi avec le même identifiant lève une `TransportException` (HTTP 409) |
+| `scheduleAt($date)` | `scheduleAt` | envoi différé, converti en UTC (`2025-01-01T10:00:00Z`) |
+| `contactVariables(['prenom' => 'Alice'])` | `contacts[0]` | variables de personnalisation du destinataire (valeurs en chaîne) |
+| `campaignName($name)` | `name` | nom de la campagne dans l'interface Conexteo |
 
 - Quand le contenu est fourni dans les options, le sujet du `SmsMessage` sert de
   SMS de repli, sauf si `fallback()` est renseigné.
 - `new SmsMessage($phone, $subject, $from)` : `$from` remplace le `sender` du DSN
   pour ce message.
-- Les limites de l'API (libellés, nombre de boutons et de cartes) sont vérifiées
+- Les limites de l'API (longueurs, nombre de boutons et de cartes) sont vérifiées
   à la construction et lèvent une `\InvalidArgumentException` avant tout appel HTTP.
+
+### Estimer les crédits sans envoyer
+
+```php
+$estimate = $conexteoClients->get('conexteo')->estimateRcsCredits($phone, $options);
+// ['sms' => ['credits_required' => ...], 'rcs' => ['credits_required' => ...], 'recipients_count' => ...]
+```
+
+Appelle `POST /messages/rcs?resumeBefore=true` : l'API calcule les crédits
+nécessaires sans envoyer le message.
 
 Montée de version
 -----------------
