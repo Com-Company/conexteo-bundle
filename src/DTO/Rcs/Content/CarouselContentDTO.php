@@ -10,10 +10,10 @@ use Connected\Conexteo\DTO\Rcs\Choice\ChoiceInterface;
  * Carrousel de cartes, facturé comme un seul message, avec des boutons communs
  * facultatifs sous le carrousel.
  */
-final readonly class CarouselContent implements RcsContentInterface
+final readonly class CarouselContentDTO implements RcsContentInterface
 {
     /**
-     * @param list<CardContent>     $cards
+     * @param list<CardContentDTO>     $cards
      * @param list<ChoiceInterface> $choices
      */
     public function __construct(
@@ -29,7 +29,7 @@ final readonly class CarouselContent implements RcsContentInterface
 
     public function toData(): array
     {
-        $data = ['cards' => array_map(static fn (CardContent $card): array => $card->toData(), $this->cards)];
+        $data = ['cards' => array_map(static fn (CardContentDTO $card): array => $card->toData(), $this->cards)];
 
         if ([] !== $this->choices) {
             $data['choices'] = array_map(static fn (ChoiceInterface $choice): array => $choice->toArray(), $this->choices);

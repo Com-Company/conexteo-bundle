@@ -10,7 +10,7 @@ namespace Connected\Conexteo\DTO\Rcs\Choice;
  * Les coordonnées acceptent un nombre, une chaîne numérique ("48.8566")
  * ou une variable de contact ("#perso1#").
  */
-final readonly class LocationChoice implements ChoiceInterface
+final readonly class LocationChoiceDTO implements ChoiceInterface
 {
     public function __construct(
         public string $title,

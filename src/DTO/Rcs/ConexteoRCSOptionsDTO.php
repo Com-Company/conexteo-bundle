@@ -13,7 +13,7 @@ use Symfony\Component\Notifier\Message\MessageOptionsInterface;
  * Sans contenu, le transport envoie le sujet du SmsMessage en RCS texte.
  * Les limites (longueurs, nombre de boutons...) sont vérifiées par l'API.
  */
-final class ConexteoRCSOptions implements MessageOptionsInterface
+final class ConexteoRCSOptionsDTO implements MessageOptionsInterface
 {
     /**
      * @param array<string, string> $contactVariables variables de personnalisation du destinataire (`prenom`, `commande`...)
@@ -24,8 +24,8 @@ final class ConexteoRCSOptions implements MessageOptionsInterface
      */
     public function __construct(
         public ?RcsContentInterface $content = null,
-        public ?SmsFallback $fallback = null,
-        public ?ShortUrl $shortUrl = null,
+        public ?SmsFallbackDTO $fallback = null,
+        public ?ShortUrlDTO $shortUrl = null,
         public array $contactVariables = [],
         public ?string $externalId = null,
         public ?\DateTimeImmutable $scheduleAt = null,

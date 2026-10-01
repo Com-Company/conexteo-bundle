@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Connected\Conexteo\DTO\Rcs\Content;
 
-final readonly class TextContent implements RcsContentInterface
+final readonly class TextContentDTO implements RcsContentInterface
 {
     public function __construct(public string $text)
     {

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Connected\Conexteo\Client;
 
 use Connected\Conexteo\Exception\ConexteoApiException;
-use Connected\Conexteo\DTO\MessageRcs;
-use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptions;
+use Connected\Conexteo\DTO\MessageRcsDTO;
+use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptionsDTO;
 
 interface ConexteoClientInterface
 {
@@ -18,7 +18,7 @@ interface ConexteoClientInterface
      * @throws \InvalidArgumentException si les options n'ont pas de contenu
      * @throws ConexteoApiException
      */
-    public function sendRcs(string $recipient, ConexteoRCSOptions $options, ?string $sender = null): ?string;
+    public function sendRcs(string $recipient, ConexteoRCSOptionsDTO $options, ?string $sender = null): ?string;
 
     /**
      * Crédits RCS et SMS nécessaires à cet envoi, sans l'effectuer (`resumeBefore=true`),
@@ -29,7 +29,7 @@ interface ConexteoClientInterface
      * @throws \InvalidArgumentException si les options n'ont pas de contenu
      * @throws ConexteoApiException
      */
-    public function estimateRcsCredits(string $recipient, ConexteoRCSOptions $options, ?string $sender = null): array;
+    public function estimateRcsCredits(string $recipient, ConexteoRCSOptionsDTO $options, ?string $sender = null): array;
 
     /**
      * Réponses reçues pour un message, telles que renvoyées par l'API
@@ -40,9 +40,9 @@ interface ConexteoClientInterface
     public function getReplies(string $messageId, int $page = 1, int $limit = 50): array;
 
     /**
-     * Même chose que getReplies(), mais les réponses sont hydratées en MessageRcs.
+     * Même chose que getReplies(), mais les réponses sont hydratées en MessageRcsDTO.
      *
-     * @return array{messages: list<MessageRcs>, meta: array}
+     * @return array{messages: list<MessageRcsDTO>, meta: array}
      *
      * @throws ConexteoApiException
      */

@@ -7,7 +7,7 @@ namespace Connected\Conexteo\DTO\Rcs\Choice;
 /**
  * Bouton qui lance un appel téléphonique.
  */
-final readonly class CallChoice implements ChoiceInterface
+final readonly class CallChoiceDTO implements ChoiceInterface
 {
     public function __construct(
         public string $title,
