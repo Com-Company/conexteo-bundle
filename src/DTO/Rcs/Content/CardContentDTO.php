@@ -10,7 +10,7 @@ use Connected\Conexteo\DTO\Rcs\Choice\ChoiceInterface;
  * Carte riche : un média public obligatoire (jpeg, jpg, png, gif, mp4, h263, m4v,
  * m4p, mpeg ou webm), un titre, une description et des boutons facultatifs.
  */
-final readonly class CardContent implements RcsContentInterface
+final readonly class CardContentDTO implements RcsContentInterface
 {
     /**
      * @param list<ChoiceInterface> $choices

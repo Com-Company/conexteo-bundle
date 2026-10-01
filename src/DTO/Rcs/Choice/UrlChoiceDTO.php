@@ -7,7 +7,7 @@ namespace Connected\Conexteo\DTO\Rcs\Choice;
 /**
  * Bouton qui ouvre un lien.
  */
-final readonly class UrlChoice implements ChoiceInterface
+final readonly class UrlChoiceDTO implements ChoiceInterface
 {
     public function __construct(
         public string $title,

@@ -58,7 +58,7 @@ Les classes `Connected\Conexteo\...` ci-dessous sont fournies par le bundle
 L'envoi passe toujours par `TexterInterface::send()` avec un `SmsMessage` :
 
 - **sans options**, le sujet du `SmsMessage` part en RCS texte (exemple ci-dessous) ;
-- **avec `ConexteoRCSOptions`**, le message part en carte, carrousel, avec boutons,
+- **avec `ConexteoRCSOptionsDTO`**, le message part en carte, carrousel, avec boutons,
   repli SMS, envoi différé... Voir [RCS enrichi](#rcs-enrichi--cartes-carrousels-boutons-et-options).
 
 ```php
@@ -67,7 +67,7 @@ L'envoi passe toujours par `TexterInterface::send()` avec un `SmsMessage` :
 namespace App\Service;
 
 use Connected\Conexteo\Client\ConexteoClientRegistry;
-use Connected\Conexteo\DTO\MessageRcs;
+use Connected\Conexteo\DTO\MessageRcsDTO;
 use Symfony\Component\Notifier\Message\SmsMessage;
 use Symfony\Component\Notifier\TexterInterface;
 
@@ -90,7 +90,7 @@ final class RcsService
     }
 
     /**
-     * @return list<MessageRcs>
+     * @return list<MessageRcsDTO>
      */
     public function fetchReplies(string $messageId): array
     {
@@ -105,7 +105,7 @@ final class RcsService
   `texter_transports`, le même que dans `SmsMessage::transport()`. Avec plusieurs
   comptes Conexteo, chaque transport a son client : `get('conexteo_location')`.
 - `getReplies()` renvoie la charge utile brute de l'API (`['items' => [...], 'meta' => [...]]`),
-  `getRepliesAsMessages()` la même chose hydratée en `MessageRcs`. Les deux
+  `getRepliesAsMessages()` la même chose hydratée en `MessageRcsDTO`. Les deux
   acceptent `page` et `limit` (50 par défaut).
 - Si le transport est déclaré en `null://null` (en dev par exemple), `get()` renvoie
   un client qui n'appelle pas l'API et ne renvoie aucune réponse.
@@ -119,10 +119,10 @@ final class RcsService
 > réponses, envoyez en synchrone ou appelez directement le client :
 
 ```php
-use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptions;
-use Connected\Conexteo\DTO\Rcs\Content\TextContent;
+use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptionsDTO;
+use Connected\Conexteo\DTO\Rcs\Content\TextContentDTO;
 
-$options = new ConexteoRCSOptions(content: new TextContent($text));
+$options = new ConexteoRCSOptionsDTO(content: new TextContentDTO($text));
 $messageId = $this->conexteoClients->get('conexteo')->sendRcs($phone, $options);
 ```
 
@@ -130,26 +130,26 @@ RCS enrichi : cartes, carrousels, boutons et options
 ----------------------------------------------------
 
 Un `SmsMessage` sans options part en RCS texte. Pour le reste, passez un
-`Connected\Conexteo\DTO\Rcs\ConexteoRCSOptions` à `SmsMessage::options()`.
+`Connected\Conexteo\DTO\Rcs\ConexteoRCSOptionsDTO` à `SmsMessage::options()`.
 C'est un DTO : tout se renseigne par le constructeur (arguments nommés) ou par
 ses propriétés publiques.
 
 ```php
-use Connected\Conexteo\DTO\Rcs\Choice\CallChoice;
-use Connected\Conexteo\DTO\Rcs\Choice\ReplyChoice;
-use Connected\Conexteo\DTO\Rcs\Choice\UrlChoice;
-use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptions;
-use Connected\Conexteo\DTO\Rcs\Content\CardContent;
+use Connected\Conexteo\DTO\Rcs\Choice\CallChoiceDTO;
+use Connected\Conexteo\DTO\Rcs\Choice\ReplyChoiceDTO;
+use Connected\Conexteo\DTO\Rcs\Choice\UrlChoiceDTO;
+use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptionsDTO;
+use Connected\Conexteo\DTO\Rcs\Content\CardContentDTO;
 
-$options = new ConexteoRCSOptions(
-    content: new CardContent(
+$options = new ConexteoRCSOptionsDTO(
+    content: new CardContentDTO(
         mediaUrl: 'https://cdn.exemple.fr/colis.png',
         title: 'Commande #4821 expédiée',
         description: 'Livraison demain entre 9h et 13h',
         choices: [
-            new UrlChoice('Suivre le colis', 'https://exemple.fr/suivi'),
-            new CallChoice('Nous appeler', '+33100000000'),
-            new ReplyChoice('Reporter'),
+            new UrlChoiceDTO('Suivre le colis', 'https://exemple.fr/suivi'),
+            new CallChoiceDTO('Nous appeler', '+33100000000'),
+            new ReplyChoiceDTO('Reporter'),
         ],
     ),
     externalId: 'order-4821-shipped',
@@ -169,27 +169,27 @@ Contenus (`Connected\Conexteo\DTO\Rcs\Content`) :
 
 | Classe | Payload |
 |---|---|
-| `TextContent($text)` | `type: text` |
-| `CardContent($mediaUrl, $title, $description, $choices)` | `type: card`. Média public obligatoire (jpeg, jpg, png, gif, mp4, h263, m4v, m4p, mpeg, webm), titre, description et boutons facultatifs |
-| `CarouselContent($cards, $choices)` | `type: carousel`, une liste de `CardContent` et des boutons communs facultatifs. Facturé comme un seul message |
+| `TextContentDTO($text)` | `type: text` |
+| `CardContentDTO($mediaUrl, $title, $description, $choices)` | `type: card`. Média public obligatoire (jpeg, jpg, png, gif, mp4, h263, m4v, m4p, mpeg, webm), titre, description et boutons facultatifs |
+| `CarouselContentDTO($cards, $choices)` | `type: carousel`, une liste de `CardContentDTO` et des boutons communs facultatifs. Facturé comme un seul message |
 
 Boutons (`Connected\Conexteo\DTO\Rcs\Choice`) :
 
 | Classe | Action |
 |---|---|
-| `ReplyChoice($text)` | réponse rapide, revient dans `getReplies()` |
-| `UrlChoice($title, $url)` | ouvre un lien |
-| `CallChoice($title, $phoneNumber)` | lance un appel |
-| `LocationChoice($title, $latitude, $longitude, $label)` | affiche un lieu. Coordonnées en nombre, en chaîne numérique ou en variable de contact (`'#perso1#'`) |
+| `ReplyChoiceDTO($text)` | réponse rapide, revient dans `getReplies()` |
+| `UrlChoiceDTO($title, $url)` | ouvre un lien |
+| `CallChoiceDTO($title, $phoneNumber)` | lance un appel |
+| `LocationChoiceDTO($title, $latitude, $longitude, $label)` | affiche un lieu. Coordonnées en nombre, en chaîne numérique ou en variable de contact (`'#perso1#'`) |
 
-Propriétés de `ConexteoRCSOptions` (toutes facultatives) :
+Propriétés de `ConexteoRCSOptionsDTO` (toutes facultatives) :
 
 | Propriété | Champ | Effet |
 |---|---|---|
 | `content` | `type` / `data` | contenu du RCS. Sans contenu, le sujet du `SmsMessage` part en RCS texte |
-| `fallback: new SmsFallback($content, $sender)` | `fallback` | SMS envoyé aux destinataires qui ne reçoivent pas le RCS |
+| `fallback: new SmsFallbackDTO($content, $sender)` | `fallback` | SMS envoyé aux destinataires qui ne reçoivent pas le RCS |
 | `checkCapability: true` | `checkCapability` | seuls les contacts déjà analysés compatibles RCS le reçoivent, les autres reçoivent directement le SMS de repli. Nécessite une liste analysée |
-| `shortUrl: new ShortUrl($url, ShortUrlMode::Unique)` | `shorturl` | lien raccourci par Conexteo (`Unique` ou `Multiple`) |
+| `shortUrl: new ShortUrlDTO($url, ShortUrlMode::UNIQUE)` | `shorturl` | lien raccourci par Conexteo (`UNIQUE` ou `MULTIPLE`) |
 | `externalId` | `external_id` | dédoublonnage : un second envoi avec le même identifiant lève une `TransportException` (HTTP 409) |
 | `scheduleAt: new \DateTimeImmutable(...)` | `scheduleAt` | envoi différé, converti en UTC (`2025-01-01T10:00:00Z`) |
 | `contactVariables: ['prenom' => 'Alice']` | `contacts[0]` | variables de personnalisation du destinataire (valeurs en chaîne) |

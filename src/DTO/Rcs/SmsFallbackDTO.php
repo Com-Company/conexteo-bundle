@@ -7,7 +7,7 @@ namespace Connected\Conexteo\DTO\Rcs;
 /**
  * SMS envoyé à la place du RCS quand le destinataire ne peut pas le recevoir.
  */
-final readonly class SmsFallback
+final readonly class SmsFallbackDTO
 {
     public function __construct(
         public string $content,

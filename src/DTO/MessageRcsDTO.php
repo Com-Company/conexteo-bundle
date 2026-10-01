@@ -7,7 +7,7 @@ namespace Connected\Conexteo\DTO;
 /**
  * Réponse RCS reçue d'un destinataire, telle que renvoyée par `GET /messages/replies`.
  */
-final readonly class MessageRcs
+final readonly class MessageRcsDTO
 {
     public function __construct(
         public string $recipient,

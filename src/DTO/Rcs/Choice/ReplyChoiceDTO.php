@@ -7,7 +7,7 @@ namespace Connected\Conexteo\DTO\Rcs\Choice;
 /**
  * Réponse rapide : le texte du bouton revient comme une réponse du destinataire.
  */
-final readonly class ReplyChoice implements ChoiceInterface
+final readonly class ReplyChoiceDTO implements ChoiceInterface
 {
     public function __construct(public string $text)
     {

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Connected\Conexteo\Client;
 
 use Connected\Conexteo\Exception\ConexteoApiException;
-use Connected\Conexteo\DTO\MessageRcs;
-use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptions;
+use Connected\Conexteo\DTO\MessageRcsDTO;
+use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptionsDTO;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -35,7 +35,7 @@ final class ConexteoClient implements ConexteoClientInterface
         ]);
     }
 
-    public function sendRcs(string $recipient, ConexteoRCSOptions $options, ?string $sender = null): ?string
+    public function sendRcs(string $recipient, ConexteoRCSOptionsDTO $options, ?string $sender = null): ?string
     {
         $payload = $this->buildRcsPayload($recipient, $options, $sender ?? $this->sender);
 
@@ -46,7 +46,7 @@ final class ConexteoClient implements ConexteoClientInterface
         return isset($data['message_id']) ? (string) $data['message_id'] : null;
     }
 
-    public function estimateRcsCredits(string $recipient, ConexteoRCSOptions $options, ?string $sender = null): array
+    public function estimateRcsCredits(string $recipient, ConexteoRCSOptionsDTO $options, ?string $sender = null): array
     {
         $payload = $this->buildRcsPayload($recipient, $options, $sender ?? $this->sender);
 
@@ -76,15 +76,15 @@ final class ConexteoClient implements ConexteoClientInterface
         $data = $this->getReplies($messageId, $page, $limit);
 
         return [
-            'messages' => array_map(MessageRcs::fromReply(...), $data['items'] ?? []),
+            'messages' => array_map(MessageRcsDTO::fromReply(...), $data['items'] ?? []),
             'meta' => $data['meta'] ?? [],
         ];
     }
 
-    private function buildRcsPayload(string $recipient, ConexteoRCSOptions $options, ?string $sender): array
+    private function buildRcsPayload(string $recipient, ConexteoRCSOptionsDTO $options, ?string $sender): array
     {
         if (null === $options->content) {
-            throw new \InvalidArgumentException('The RCS options have no content: set ConexteoRCSOptions::$content.');
+            throw new \InvalidArgumentException('The RCS options have no content: set ConexteoRCSOptionsDTO::$content.');
         }
 
         $payload = $options->toArray();

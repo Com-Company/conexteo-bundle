@@ -7,7 +7,7 @@ namespace Connected\Conexteo\DTO\Rcs;
 /**
  * Lien raccourci par Conexteo.
  */
-final readonly class ShortUrl
+final readonly class ShortUrlDTO
 {
     public function __construct(
         public string $url,
