@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Connected\Conexteo\Model\Rcs\Content;
+namespace Connected\Conexteo\DTO\Rcs\Content;
 
 /**
  * Contenu d'un RCS : donne le `type` et le `data` du payload de `POST /messages/rcs`.

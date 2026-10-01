@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Connected\Conexteo\Model;
+namespace Connected\Conexteo\DTO;
 
 /**
  * Réponse RCS reçue d'un destinataire, telle que renvoyée par `GET /messages/replies`.

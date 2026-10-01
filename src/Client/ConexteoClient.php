@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Connected\Conexteo\Client;
 
 use Connected\Conexteo\Exception\ConexteoApiException;
-use Connected\Conexteo\Model\MessageRcs;
-use Connected\Conexteo\Model\Rcs\ConexteoRCSOptions;
+use Connected\Conexteo\DTO\MessageRcs;
+use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptions;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -83,12 +83,12 @@ final class ConexteoClient implements ConexteoClientInterface
 
     private function buildRcsPayload(string $recipient, ConexteoRCSOptions $options, ?string $sender): array
     {
-        if (!$options->hasContent()) {
-            throw new \InvalidArgumentException('The RCS options have no content: call ConexteoRCSOptions::content().');
+        if (null === $options->content) {
+            throw new \InvalidArgumentException('The RCS options have no content: set ConexteoRCSOptions::$content.');
         }
 
         $payload = $options->toArray();
-        $payload['contacts'] = [['recipient' => $recipient] + $options->getContactVariables()];
+        $payload['contacts'] = [['recipient' => $recipient] + $options->contactVariables];
 
         if (null !== $sender) {
             $payload['sender'] = $sender;

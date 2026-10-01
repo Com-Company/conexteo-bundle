@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Connected\Conexteo\Client;
 
 use Connected\Conexteo\Exception\ConexteoApiException;
-use Connected\Conexteo\Model\MessageRcs;
-use Connected\Conexteo\Model\Rcs\ConexteoRCSOptions;
+use Connected\Conexteo\DTO\MessageRcs;
+use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptions;
 
 interface ConexteoClientInterface
 {
