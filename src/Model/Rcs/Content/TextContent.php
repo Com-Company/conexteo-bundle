@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Connected\Conexteo\Rcs\Content;
+namespace Connected\Conexteo\Model\Rcs\Content;
 
-use Connected\Conexteo\Rcs\TextLengthGuard;
+use Connected\Conexteo\Model\Rcs\TextLengthGuard;
 
 final readonly class TextContent implements RcsContentInterface
 {

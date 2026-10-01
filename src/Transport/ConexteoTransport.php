@@ -4,9 +4,9 @@ namespace Connected\Conexteo\Transport;
 
 use Connected\Conexteo\Client\ConexteoClientInterface;
 use Connected\Conexteo\Exception\ConexteoApiException;
-use Connected\Conexteo\Rcs\ConexteoRCSOptions;
-use Connected\Conexteo\Rcs\Content\TextContent;
-use Connected\Conexteo\Rcs\SmsFallback;
+use Connected\Conexteo\Model\Rcs\ConexteoRCSOptions;
+use Connected\Conexteo\Model\Rcs\Content\TextContent;
+use Connected\Conexteo\Model\Rcs\SmsFallback;
 use Symfony\Component\Notifier\Exception\TransportException;
 use Symfony\Component\Notifier\Exception\UnsupportedMessageTypeException;
 use Symfony\Component\Notifier\Exception\UnsupportedOptionsException;

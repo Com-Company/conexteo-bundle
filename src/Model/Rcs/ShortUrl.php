@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Connected\Conexteo\Rcs;
+namespace Connected\Conexteo\Model\Rcs;
 
 /**
  * Lien raccourci par Conexteo.

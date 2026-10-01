@@ -55,6 +55,12 @@ Utilisation
 Les classes `Connected\Conexteo\...` ci-dessous sont fournies par le bundle
 (à partir de la 6.0) : il n'y a rien à créer dans l'application.
 
+L'envoi passe toujours par `TexterInterface::send()` avec un `SmsMessage` :
+
+- **sans options**, le sujet du `SmsMessage` part en RCS texte (exemple ci-dessous) ;
+- **avec `ConexteoRCSOptions`**, le message part en carte, carrousel, avec boutons,
+  repli SMS, envoi différé... Voir [RCS enrichi](#rcs-enrichi--cartes-carrousels-boutons-et-options).
+
 ```php
 <?php
 
@@ -111,20 +117,27 @@ final class RcsService
 > `TexterInterface::send()` renvoie `null` quand Notifier est routé vers Messenger
 > en asynchrone : aucun `message_id` n'est alors récupérable. Pour lire les
 > réponses, envoyez en synchrone ou appelez directement le client :
-> `$conexteoClients->get('conexteo')->sendRcs($phone, (new ConexteoRCSOptions())->content(new TextContent($text)))`.
+
+```php
+use Connected\Conexteo\Model\Rcs\ConexteoRCSOptions;
+use Connected\Conexteo\Model\Rcs\Content\TextContent;
+
+$options = (new ConexteoRCSOptions())->content(new TextContent($text));
+$messageId = $this->conexteoClients->get('conexteo')->sendRcs($phone, $options);
+```
 
 RCS enrichi : cartes, carrousels, boutons et options
 ----------------------------------------------------
 
 Un `SmsMessage` sans options part en RCS texte. Pour le reste, passez un
-`Connected\Conexteo\Rcs\ConexteoRCSOptions` à `SmsMessage::options()` :
+`Connected\Conexteo\Model\Rcs\ConexteoRCSOptions` à `SmsMessage::options()` :
 
 ```php
-use Connected\Conexteo\Rcs\Choice\CallChoice;
-use Connected\Conexteo\Rcs\Choice\ReplyChoice;
-use Connected\Conexteo\Rcs\Choice\UrlChoice;
-use Connected\Conexteo\Rcs\ConexteoRCSOptions;
-use Connected\Conexteo\Rcs\Content\CardContent;
+use Connected\Conexteo\Model\Rcs\Choice\CallChoice;
+use Connected\Conexteo\Model\Rcs\Choice\ReplyChoice;
+use Connected\Conexteo\Model\Rcs\Choice\UrlChoice;
+use Connected\Conexteo\Model\Rcs\ConexteoRCSOptions;
+use Connected\Conexteo\Model\Rcs\Content\CardContent;
 
 $sms = (new SmsMessage($phone, 'Votre colis #4821 est expédié : https://exemple.fr/suivi'))
     ->transport('conexteo')
@@ -144,7 +157,7 @@ $sms = (new SmsMessage($phone, 'Votre colis #4821 est expédié : https://exempl
 $this->texter->send($sms);
 ```
 
-Contenus (`Connected\Conexteo\Rcs\Content`) :
+Contenus (`Connected\Conexteo\Model\Rcs\Content`) :
 
 | Classe | Payload |
 |---|---|
@@ -152,7 +165,7 @@ Contenus (`Connected\Conexteo\Rcs\Content`) :
 | `CardContent($mediaUrl, $title, $description, $choices)` | `type: card`. Média public obligatoire (jpeg, jpg, png, gif, mp4, h263, m4v, m4p, mpeg, webm), titre (200 car.) et description (2000 car.) facultatifs, 4 boutons maximum |
 | `CarouselContent($cards, $choices)` | `type: carousel`, de 1 à 10 `CardContent` et jusqu'à 3 boutons communs. Facturé comme un seul message |
 
-Boutons (`Connected\Conexteo\Rcs\Choice`), libellé de 25 caractères maximum :
+Boutons (`Connected\Conexteo\Model\Rcs\Choice`), libellé de 25 caractères maximum :
 
 | Classe | Action |
 |---|---|

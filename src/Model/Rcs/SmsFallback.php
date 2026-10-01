@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Connected\Conexteo\Rcs;
+namespace Connected\Conexteo\Model\Rcs;
 
 /**
  * SMS envoyé à la place du RCS quand le destinataire ne peut pas le recevoir.

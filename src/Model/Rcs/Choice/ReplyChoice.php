@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Connected\Conexteo\Rcs\Choice;
+namespace Connected\Conexteo\Model\Rcs\Choice;
 
-use Connected\Conexteo\Rcs\TextLengthGuard;
+use Connected\Conexteo\Model\Rcs\TextLengthGuard;
 
 /**
  * Réponse rapide : le texte du bouton revient comme une réponse du destinataire.
