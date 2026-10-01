@@ -4,9 +4,9 @@ namespace Connected\Conexteo\Transport;
 
 use Connected\Conexteo\Client\ConexteoClientInterface;
 use Connected\Conexteo\Exception\ConexteoApiException;
-use Connected\Conexteo\Model\Rcs\ConexteoRCSOptions;
-use Connected\Conexteo\Model\Rcs\Content\TextContent;
-use Connected\Conexteo\Model\Rcs\SmsFallback;
+use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptions;
+use Connected\Conexteo\DTO\Rcs\Content\TextContent;
+use Connected\Conexteo\DTO\Rcs\SmsFallback;
 use Symfony\Component\Notifier\Exception\TransportException;
 use Symfony\Component\Notifier\Exception\UnsupportedMessageTypeException;
 use Symfony\Component\Notifier\Exception\UnsupportedOptionsException;
@@ -44,9 +44,9 @@ final class ConexteoTransport extends AbstractTransport
             throw new UnsupportedOptionsException(__CLASS__, ConexteoRCSOptions::class, $options);
         }
 
-        $options = $options->hasContent()
-            ? $this->withSubjectAsFallbackIfMissing($options, $message->getSubject())
-            : $this->withSubjectAsTextContent($options, $message->getSubject());
+        $options = null === $options->content
+            ? $this->withSubjectAsTextContent($options, $message->getSubject())
+            : $this->withSubjectAsFallbackIfMissing($options, $message->getSubject());
 
         $sender = '' !== $message->getFrom() ? $message->getFrom() : null;
 
@@ -87,9 +87,15 @@ final class ConexteoTransport extends AbstractTransport
         return $this;
     }
 
+    /**
+     * Travaille sur une copie : les options du SmsMessage appelant ne sont pas modifiées.
+     */
     private function withSubjectAsTextContent(ConexteoRCSOptions $options, string $subject): ConexteoRCSOptions
     {
-        return (clone $options)->content(new TextContent($subject));
+        $options = clone $options;
+        $options->content = new TextContent($subject);
+
+        return $options;
     }
 
     /**
@@ -97,10 +103,13 @@ final class ConexteoTransport extends AbstractTransport
      */
     private function withSubjectAsFallbackIfMissing(ConexteoRCSOptions $options, string $subject): ConexteoRCSOptions
     {
-        if ($options->hasFallback() || '' === $subject) {
+        if (null !== $options->fallback || '' === $subject) {
             return $options;
         }
 
-        return (clone $options)->fallback(new SmsFallback($subject));
+        $options = clone $options;
+        $options->fallback = new SmsFallback($subject);
+
+        return $options;
     }
 }

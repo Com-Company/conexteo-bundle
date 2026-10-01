@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Connected\Conexteo\Client;
 
-use Connected\Conexteo\Model\Rcs\ConexteoRCSOptions;
+use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptions;
 
 /**
  * Client qui n'appelle pas l'API, utilisé quand le transport Notifier est `null://`.

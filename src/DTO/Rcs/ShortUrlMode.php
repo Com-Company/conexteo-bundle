@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Connected\Conexteo\Model\Rcs;
+namespace Connected\Conexteo\DTO\Rcs;
 
 enum ShortUrlMode: string
 {
