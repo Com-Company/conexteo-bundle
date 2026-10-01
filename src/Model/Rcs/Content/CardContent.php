@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Connected\Conexteo\Rcs\Content;
+namespace Connected\Conexteo\Model\Rcs\Content;
 
-use Connected\Conexteo\Rcs\Choice\ChoiceInterface;
-use Connected\Conexteo\Rcs\Choice\ChoiceList;
-use Connected\Conexteo\Rcs\TextLengthGuard;
+use Connected\Conexteo\Model\Rcs\Choice\ChoiceInterface;
+use Connected\Conexteo\Model\Rcs\Choice\ChoiceList;
+use Connected\Conexteo\Model\Rcs\TextLengthGuard;
 
 /**
  * Carte riche : un média public obligatoire (jpeg, jpg, png, gif, mp4, h263, m4v,

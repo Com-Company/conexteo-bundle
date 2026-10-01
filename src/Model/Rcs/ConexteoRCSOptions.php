@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Connected\Conexteo\Rcs;
+namespace Connected\Conexteo\Model\Rcs;
 
-use Connected\Conexteo\Rcs\Content\RcsContentInterface;
+use Connected\Conexteo\Model\Rcs\Content\RcsContentInterface;
 use Symfony\Component\Notifier\Message\MessageOptionsInterface;
 
 /**

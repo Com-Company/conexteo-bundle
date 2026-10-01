@@ -6,7 +6,7 @@ namespace Connected\Conexteo\Client;
 
 use Connected\Conexteo\Exception\ConexteoApiException;
 use Connected\Conexteo\Model\MessageRcs;
-use Connected\Conexteo\Rcs\ConexteoRCSOptions;
+use Connected\Conexteo\Model\Rcs\ConexteoRCSOptions;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;

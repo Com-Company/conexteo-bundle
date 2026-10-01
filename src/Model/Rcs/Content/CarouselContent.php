@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Connected\Conexteo\Rcs\Content;
+namespace Connected\Conexteo\Model\Rcs\Content;
 
-use Connected\Conexteo\Rcs\Choice\ChoiceInterface;
-use Connected\Conexteo\Rcs\Choice\ChoiceList;
+use Connected\Conexteo\Model\Rcs\Choice\ChoiceInterface;
+use Connected\Conexteo\Model\Rcs\Choice\ChoiceList;
 
 /**
  * Carrousel de 1 à 10 cartes, facturé comme un seul message, avec jusqu'à

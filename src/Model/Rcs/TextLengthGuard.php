@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Connected\Conexteo\Rcs;
+namespace Connected\Conexteo\Model\Rcs;
 
 /**
  * Vérifie les longueurs maximales de `POST /messages/rcs` avant l'appel HTTP.

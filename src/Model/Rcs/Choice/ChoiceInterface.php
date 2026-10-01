@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Connected\Conexteo\Rcs\Choice;
+namespace Connected\Conexteo\Model\Rcs\Choice;
 
 /**
  * Bouton affiché sous une carte (4 au maximum) ou un carrousel (3 au maximum).
