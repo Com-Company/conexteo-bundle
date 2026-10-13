@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Connected\Conexteo\Client;
 
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\Notifier\Exception\IncompleteDsnException;
 use Symfony\Component\Notifier\Transport\Dsn;
@@ -15,11 +17,10 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  */
 final class ConexteoClientFactory
 {
-    private readonly HttpClientInterface $httpClient;
-
-    public function __construct(?HttpClientInterface $httpClient = null)
-    {
-        $this->httpClient = $httpClient ?? HttpClient::create();
+    public function __construct(
+        private readonly HttpClientInterface $httpClient,
+        private readonly LoggerInterface $logger = new NullLogger(),
+    ) {
     }
 
     public function createFromDsn(Dsn $dsn): ConexteoClient
@@ -30,6 +31,7 @@ final class ConexteoClientFactory
             $dsn->getOption('sender'),
             $this->httpClient,
             $this->buildEndpoint($dsn),
+            $this->logger,
         );
     }
 
