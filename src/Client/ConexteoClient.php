@@ -7,6 +7,8 @@ namespace Connected\Conexteo\Client;
 use Connected\Conexteo\Exception\ConexteoApiException;
 use Connected\Conexteo\DTO\MessageRcsDTO;
 use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptionsDTO;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -24,6 +26,7 @@ final class ConexteoClient implements ConexteoClientInterface
         private readonly ?string $sender,
         HttpClientInterface $httpClient,
         string $endpoint = self::DEFAULT_ENDPOINT,
+        private readonly LoggerInterface $logger = new NullLogger(),
     ) {
         $this->httpClient = $httpClient->withOptions([
             'base_uri' => sprintf('https://%s', $endpoint),
@@ -42,6 +45,12 @@ final class ConexteoClient implements ConexteoClientInterface
         $response = $this->httpClient->request('POST', '/messages/rcs', ['json' => $payload]);
 
         $data = $this->decodeResponseOrThrow($response, 'Unable to send the RCS message');
+
+        $this->logger->info('Conexteo RCS envoyé', [
+            'message_id' => $data['message_id'] ?? null,
+            'rcs_count' => $data['rcs']['rcs_count'] ?? 0,
+            'sms_count' => $data['sms']['sms_count'] ?? 0,
+        ]);
 
         return isset($data['message_id']) ? (string) $data['message_id'] : null;
     }
@@ -90,8 +99,8 @@ final class ConexteoClient implements ConexteoClientInterface
         $payload = $options->toArray();
         $payload['contacts'] = [['recipient' => $recipient] + $options->contactVariables];
 
-        if (null !== $sender) {
-            $payload['sender'] = $sender;
+        if (null !== $sender && isset($payload['fallback']) && !isset($payload['fallback']['sender'])) {
+            $payload['fallback']['sender'] = $sender;
         }
 
         return $payload;

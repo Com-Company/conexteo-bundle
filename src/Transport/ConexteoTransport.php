@@ -3,10 +3,10 @@
 namespace Connected\Conexteo\Transport;
 
 use Connected\Conexteo\Client\ConexteoClientInterface;
-use Connected\Conexteo\Exception\ConexteoApiException;
 use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptionsDTO;
 use Connected\Conexteo\DTO\Rcs\Content\TextContentDTO;
 use Connected\Conexteo\DTO\Rcs\SmsFallbackDTO;
+use Connected\Conexteo\Exception\ConexteoApiException;
 use Symfony\Component\Notifier\Exception\TransportException;
 use Symfony\Component\Notifier\Exception\UnsupportedMessageTypeException;
 use Symfony\Component\Notifier\Exception\UnsupportedOptionsException;
@@ -44,9 +44,7 @@ final class ConexteoTransport extends AbstractTransport
             throw new UnsupportedOptionsException(__CLASS__, ConexteoRCSOptionsDTO::class, $options);
         }
 
-        $options = null === $options->content
-            ? $this->withSubjectAsTextContent($options, $message->getSubject())
-            : $this->withSubjectAsFallbackIfMissing($options, $message->getSubject());
+        $options = $this->withSubjectDefaults($options, $message->getSubject());
 
         $sender = '' !== $message->getFrom() ? $message->getFrom() : null;
 
@@ -88,27 +86,30 @@ final class ConexteoTransport extends AbstractTransport
     }
 
     /**
+     * Le sujet du SmsMessage sert de contenu RCS texte quand les options n'en définissent pas,
+     * et de SMS de repli quand aucun repli n'est défini : sans repli, les mobiles non compatibles
+     * RCS ne recevraient rien.
+     *
      * Travaille sur une copie : les options du SmsMessage appelant ne sont pas modifiées.
      */
-    private function withSubjectAsTextContent(ConexteoRCSOptionsDTO $options, string $subject): ConexteoRCSOptionsDTO
+    private function withSubjectDefaults(ConexteoRCSOptionsDTO $options, string $subject): ConexteoRCSOptionsDTO
     {
-        $options = clone $options;
-        $options->content = new TextContentDTO($subject);
+        $needsContent = null === $options->content;
+        $needsFallback = null === $options->fallback && '' !== $subject;
 
-        return $options;
-    }
-
-    /**
-     * Quand le contenu vient des options, le sujet du SmsMessage sert de SMS de repli, sauf si un repli est déjà défini.
-     */
-    private function withSubjectAsFallbackIfMissing(ConexteoRCSOptionsDTO $options, string $subject): ConexteoRCSOptionsDTO
-    {
-        if (null !== $options->fallback || '' === $subject) {
+        if (!$needsContent && !$needsFallback) {
             return $options;
         }
 
         $options = clone $options;
-        $options->fallback = new SmsFallbackDTO($subject);
+
+        if ($needsContent) {
+            $options->content = new TextContentDTO($subject);
+        }
+
+        if ($needsFallback) {
+            $options->fallback = new SmsFallbackDTO($subject);
+        }
 
         return $options;
     }
