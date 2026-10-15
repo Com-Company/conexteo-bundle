@@ -6,7 +6,6 @@ namespace Connected\Conexteo\Client;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\Notifier\Exception\IncompleteDsnException;
 use Symfony\Component\Notifier\Transport\Dsn;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
