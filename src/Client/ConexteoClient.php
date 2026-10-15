@@ -99,8 +99,8 @@ final class ConexteoClient implements ConexteoClientInterface
         $payload = $options->toArray();
         $payload['contacts'] = [['recipient' => $recipient] + $options->contactVariables];
 
-        if (null !== $sender) {
-            $payload['sender'] = $sender;
+        if (null !== $sender && isset($payload['fallback']) && !isset($payload['fallback']['sender'])) {
+            $payload['fallback']['sender'] = $sender;
         }
 
         return $payload;
