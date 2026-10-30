@@ -1,8 +1,13 @@
 {
   "name": "com-company/conexteo-notifier",
   "type": "symfony-bundle",
-  "description": "Symfony Conexteo Notifier Bridge",
-  "keywords": ["sms", "Conexteo", "notifier"],
+  "description": "Symfony Conexteo Notifier Bridge (RCS)",
+  "keywords": [
+    "sms",
+    "rcs",
+    "Conexteo",
+    "notifier"
+  ],
   "homepage": "https://www.com-company.fr/",
   "license": "MIT",
   "authors": [
@@ -23,6 +28,7 @@
     "symfony/dependency-injection": "^7.0|^8.0",
     "symfony/config": "^7.0|^8.0",
     "symfony/http-kernel": "^7.0|^8.0",
+    "symfony/yaml": "^7.0|^8.0",
     "ext-json": "*"
   },
   "minimum-stability": "dev"

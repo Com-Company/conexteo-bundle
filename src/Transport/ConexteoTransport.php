@@ -2,23 +2,32 @@
 
 namespace Connected\Conexteo\Transport;
 
+use Connected\Conexteo\Client\ConexteoClientInterface;
+use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptionsDTO;
+use Connected\Conexteo\DTO\Rcs\Content\TextContentDTO;
+use Connected\Conexteo\DTO\Rcs\SmsFallbackDTO;
+use Connected\Conexteo\Exception\ConexteoApiException;
 use Symfony\Component\Notifier\Exception\TransportException;
 use Symfony\Component\Notifier\Exception\UnsupportedMessageTypeException;
+use Symfony\Component\Notifier\Exception\UnsupportedOptionsException;
 use Symfony\Component\Notifier\Message\MessageInterface;
 use Symfony\Component\Notifier\Message\SentMessage;
 use Symfony\Component\Notifier\Message\SmsMessage;
 use Symfony\Component\Notifier\Transport\AbstractTransport;
-use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * Adapte le contrat Notifier au client Conexteo : les appels HTTP sont
+ * dans ConexteoClient.
+ */
 final class ConexteoTransport extends AbstractTransport
 {
     protected const string HOST = 'api.conexteo.com';
 
     private ?string $sender = null;
 
-    public function __construct(private readonly string $appId, private readonly string $apiKey, ?HttpClientInterface $client = null, ?EventDispatcherInterface $dispatcher = null)
+    public function __construct(private readonly ConexteoClientInterface $conexteoClient, ?HttpClientInterface $client = null, ?EventDispatcherInterface $dispatcher = null)
     {
         parent::__construct($client, $dispatcher);
     }
@@ -29,56 +38,41 @@ final class ConexteoTransport extends AbstractTransport
             throw new UnsupportedMessageTypeException(__CLASS__, SmsMessage::class, $message);
         }
 
-        $endpoint = sprintf('https://%s/messages', $this->getEndpoint());
+        $options = $message->getOptions() ?? new ConexteoRCSOptionsDTO();
 
-        $content = [
-            "message_type" => 1,
-            "content" => $message->getSubject(),
-            "recipients" => [$message->getPhone()],
-        ];
-
-        if ($this->sender) {
-            $content['sender'] = $this->sender;
+        if (!$options instanceof ConexteoRCSOptionsDTO) {
+            throw new UnsupportedOptionsException(__CLASS__, ConexteoRCSOptionsDTO::class, $options);
         }
 
-        $headers["X-APP-ID"] = $this->appId;
-        $headers["X-API-KEY"] = $this->apiKey;
-        $headers['Content-Type'] = 'application/json';
+        $options = $this->withSubjectDefaults($options, $message->getSubject());
 
-        $response = $this->client->request('POST', $endpoint, [
-            'headers' => $headers,
-            'json' => $content
-        ]);
+        $sender = '' !== $message->getFrom() ? $message->getFrom() : null;
 
         try {
-            $statusCode = $response->getStatusCode();
-        } catch (TransportExceptionInterface $e) {
-            throw new TransportException('Could not reach the remote Conexteo server.', $response, 0, $e);
+            $messageId = $this->conexteoClient->sendRcs($message->getPhone(), $options, $sender);
+        } catch (ConexteoApiException $e) {
+            throw new TransportException($e->getMessage(), $e->response, 0, $e);
         }
-
-        if (200 !== $statusCode) {
-            $error = $response->toArray(false);
-
-            throw new TransportException(sprintf('Unable to send the SMS: %s.', json_encode($error, JSON_THROW_ON_ERROR)), $response);
-        }
-
-        $success = $response->toArray(false);
 
         $sentMessage = new SentMessage($message, (string) $this);
-        $sentMessage->setMessageId($success['message_id']);
+
+        if (null !== $messageId) {
+            $sentMessage->setMessageId($messageId);
+        }
 
         return $sentMessage;
     }
 
     public function supports(MessageInterface $message): bool
     {
-        return $message instanceof SmsMessage;
+        return $message instanceof SmsMessage
+            && (null === $message->getOptions() || $message->getOptions() instanceof ConexteoRCSOptionsDTO);
     }
 
     public function __toString(): string
     {
         if (null !== $this->sender) {
-            return sprintf('conexteo://%s?&sender=%s', $this->getEndpoint(),  $this->sender);
+            return sprintf('conexteo://%s?sender=%s', $this->getEndpoint(), $this->sender);
         }
 
         return sprintf('conexteo://%s', $this->getEndpoint());
@@ -89,5 +83,34 @@ final class ConexteoTransport extends AbstractTransport
         $this->sender = $sender;
 
         return $this;
+    }
+
+    /**
+     * Le sujet du SmsMessage sert de contenu RCS texte quand les options n'en définissent pas,
+     * et de SMS de repli quand aucun repli n'est défini : sans repli, les mobiles non compatibles
+     * RCS ne recevraient rien.
+     *
+     * Travaille sur une copie : les options du SmsMessage appelant ne sont pas modifiées.
+     */
+    private function withSubjectDefaults(ConexteoRCSOptionsDTO $options, string $subject): ConexteoRCSOptionsDTO
+    {
+        $needsContent = null === $options->content;
+        $needsFallback = null === $options->fallback && '' !== $subject;
+
+        if (!$needsContent && !$needsFallback) {
+            return $options;
+        }
+
+        $options = clone $options;
+
+        if ($needsContent) {
+            $options->content = new TextContentDTO($subject);
+        }
+
+        if ($needsFallback) {
+            $options->fallback = new SmsFallbackDTO($subject);
+        }
+
+        return $options;
     }
 }
