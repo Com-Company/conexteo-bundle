@@ -1,0 +1,50 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Connected\Conexteo\Client;
+
+use Connected\Conexteo\Exception\ConexteoApiException;
+use Connected\Conexteo\DTO\MessageRcsDTO;
+use Connected\Conexteo\DTO\Rcs\ConexteoRCSOptionsDTO;
+
+interface ConexteoClientInterface
+{
+    /**
+     * Envoie un RCS et retourne le `message_id` Conexteo, s'il est renvoyé par l'API.
+     *
+     * @param string|null $sender remplace l'expéditeur du DSN
+     *
+     * @throws \InvalidArgumentException si les options n'ont pas de contenu
+     * @throws ConexteoApiException
+     */
+    public function sendRcs(string $recipient, ConexteoRCSOptionsDTO $options, ?string $sender = null): ?string;
+
+    /**
+     * Crédits RCS et SMS nécessaires à cet envoi, sans l'effectuer (`resumeBefore=true`),
+     * tels que renvoyés par l'API (`['sms' => [...], 'rcs' => [...], 'recipients_count' => ...]`).
+     *
+     * @param string|null $sender remplace l'expéditeur du DSN
+     *
+     * @throws \InvalidArgumentException si les options n'ont pas de contenu
+     * @throws ConexteoApiException
+     */
+    public function estimateRcsCredits(string $recipient, ConexteoRCSOptionsDTO $options, ?string $sender = null): array;
+
+    /**
+     * Réponses reçues pour un message, telles que renvoyées par l'API
+     * (`['items' => [...], 'meta' => [...]]`).
+     *
+     * @throws ConexteoApiException
+     */
+    public function getReplies(string $messageId, int $page = 1, int $limit = 50): array;
+
+    /**
+     * Même chose que getReplies(), mais les réponses sont hydratées en MessageRcsDTO.
+     *
+     * @return array{messages: list<MessageRcsDTO>, meta: array}
+     *
+     * @throws ConexteoApiException
+     */
+    public function getRepliesAsMessages(string $messageId, int $page = 1, int $limit = 50): array;
+}
